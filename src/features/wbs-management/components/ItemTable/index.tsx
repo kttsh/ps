@@ -1,7 +1,7 @@
 // features/wbs-management/components/ItemTable/index.tsx
-// セル編集機能対応のアイテムテーブルコンポーネント
+// セル編集機能対応のアイテムテーブルコンポーネント（完全版）
 
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { flexRender } from '@tanstack/react-table';
 import type { Item } from '../../types/item';
@@ -9,7 +9,7 @@ import { useItemTable } from './useItemTable';
 import { ItemTableFilters } from './ItemTableFilters';
 import { EditableItemTableCell } from './EditableItemTableCell';
 import { cn } from '@/lib/utils';
-import { ChevronUp, ChevronDown, Edit, Save, X } from 'lucide-react';
+import { ChevronUp, ChevronDown, Edit, Save, X, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ItemTableProps {
@@ -26,6 +26,9 @@ interface ItemTableProps {
  * - インラインセル編集
  * - データの保存・キャンセル機能
  * - 編集不可能なカラムの制御
+ * - フィルタ表示切り替え（編集モード時は常に表示）
+ * - コンパクトなUI設計
+ * - Cost Elementフィルタ: テキスト入力対応
  */
 export const ItemTable: React.FC<ItemTableProps> = ({ 
   data, 
@@ -33,21 +36,26 @@ export const ItemTable: React.FC<ItemTableProps> = ({
   onDataChange 
 }) => {
   const { table, columnDefs } = useItemTable(data);
-  const rows = table.getRowModel().rows;
 
   // 編集モードの状態管理
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingData, setEditingData] = useState<Item[]>(data);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
 
   // 仮想スクロール用のコンテナRef
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
+  // 編集モード時のテーブルデータを更新
+  const displayData = isEditMode ? editingData : data;
+  const tableWithEditData = useItemTable(displayData);
+  const tableRows = tableWithEditData.table.getRowModel().rows;
+
   // TanStack Virtualの設定
   const rowVirtualizer = useVirtualizer({
-    count: rows.length,
+    count: tableRows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 50, // 編集モード時は少し高めに設定
+    estimateSize: () => 40, // コンパクトなサイズに調整
     overscan: 10,
   });
 
@@ -59,6 +67,13 @@ export const ItemTable: React.FC<ItemTableProps> = ({
       ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0)
       : 0;
 
+  // データが変更された場合に編集データを同期
+  useEffect(() => {
+    if (!isEditMode) {
+      setEditingData([...data]);
+    }
+  }, [data, isEditMode]);
+
   /**
    * 編集モードを開始
    */
@@ -66,6 +81,8 @@ export const ItemTable: React.FC<ItemTableProps> = ({
     setEditingData([...data]);
     setIsEditMode(true);
     setHasChanges(false);
+    // 編集モード時は必ずフィルタを表示
+    setShowFilters(true);
   }, [data]);
 
   /**
@@ -96,26 +113,27 @@ export const ItemTable: React.FC<ItemTableProps> = ({
   ) => {
     setEditingData(prevData => {
       const newData = [...prevData];
-      const actualRowIndex = rows[rowIndex]?.original ? 
-        editingData.findIndex(item => 
-          item.jobNo === rows[rowIndex].original.jobNo && 
-          item.itemNo === rows[rowIndex].original.itemNo
-        ) : -1;
+      const row = tableRows[rowIndex];
       
-      if (actualRowIndex !== -1) {
-        newData[actualRowIndex] = {
-          ...newData[actualRowIndex],
-          [columnId]: value
-        };
-        setHasChanges(true);
+      if (row?.original) {
+        // 元のデータ配列での正しいインデックスを見つける
+        const actualRowIndex = newData.findIndex(item => 
+          item.jobNo === row.original.jobNo && 
+          item.itemNo === row.original.itemNo &&
+          item.coreItemNo === row.original.coreItemNo
+        );
+        
+        if (actualRowIndex !== -1) {
+          newData[actualRowIndex] = {
+            ...newData[actualRowIndex],
+            [columnId]: value
+          };
+          setHasChanges(true);
+        }
       }
       return newData;
     });
-  }, [rows, editingData]);
-
-  // 編集モード時のテーブルデータを更新
-  const displayData = isEditMode ? editingData : data;
-  const tableWithEditData = useItemTable(displayData);
+  }, [tableRows]);
 
   return (
     <div className={cn('w-full h-full flex flex-col', className)}>
@@ -136,6 +154,22 @@ export const ItemTable: React.FC<ItemTableProps> = ({
         </div>
         
         <div className="flex items-center gap-2">
+          {/* フィルタ切り替えボタン（編集モード時は常に表示、無効化） */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+            className={cn(
+              "flex items-center gap-2 h-8 px-3",
+              showFilters || isEditMode ? "bg-gray-100 text-gray-700" : "bg-white text-gray-500"
+            )}
+            disabled={isEditMode} // 編集モード時は無効化（常に表示のため）
+            title={isEditMode ? "Filters are always visible in edit mode" : "Toggle filter visibility"}
+          >
+            <Filter className="w-4 h-4" />
+            Filter
+          </Button>
+          
           {isEditMode ? (
             <>
               <Button
@@ -188,7 +222,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
                 return (
                   <th
                     key={header.id}
-                    className="px-4 py-3 text-left text-xs font-semibold text-gray-700 bg-gray-100"
+                    className="px-3 py-2 text-left text-xs font-semibold text-gray-700 bg-gray-100"
                     style={{
                       width: header.getSize(),
                       minWidth: columnDefs.find(c => c.id === column.id)?.minSize,
@@ -202,7 +236,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
                       disabled={isEditMode}
                       aria-label={`Sort by ${header.column.columnDef.header}`}
                     >
-                      <span>{flexRender(header.column.columnDef.header, header.getContext())}</span>
+                      <span className="text-xs">{flexRender(header.column.columnDef.header, header.getContext())}</span>
                       {isSorted && !isEditMode && (
                         <span className="ml-1" aria-hidden="true">
                           {isSorted === 'asc' ? (
@@ -218,13 +252,13 @@ export const ItemTable: React.FC<ItemTableProps> = ({
               })}
             </tr>
             
-            {/* フィルター行（編集モード時は非表示） */}
-            {!isEditMode && (
+            {/* フィルター行（編集モード時は常に表示、非編集時は切り替え可能） */}
+            {(showFilters || isEditMode) && (
               <tr className="border-b border-gray-200">
                 {tableWithEditData.table.getFlatHeaders().map((header) => (
                   <th
                     key={`filter-${header.id}`}
-                    className="px-4 py-2 bg-gray-50"
+                    className="px-3 py-1 bg-gray-50"
                     style={{
                       width: header.getSize(),
                     }}
@@ -240,7 +274,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
 
           {/* テーブルボディ */}
           <tbody>
-            {/* 上部パディング */}
+            {/* 上部パディング（仮想スクロール用） */}
             {paddingTop > 0 && (
               <tr>
                 <td colSpan={tableWithEditData.table.getAllColumns().length} style={{ height: paddingTop }} />
@@ -249,7 +283,12 @@ export const ItemTable: React.FC<ItemTableProps> = ({
 
             {/* 仮想化された行 */}
             {virtualRows.map((virtualRow) => {
-              const row = tableWithEditData.table.getRowModel().rows[virtualRow.index];
+              const row = tableRows[virtualRow.index];
+              
+              // 行が存在しない場合はスキップ
+              if (!row) {
+                return null;
+              }
               
               return (
                 <tr
@@ -268,7 +307,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className="px-4 py-3"
+                      className="px-3 py-2"
                       style={{
                         width: cell.column.getSize(),
                       }}
@@ -290,7 +329,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
               );
             })}
 
-            {/* 下部パディング */}
+            {/* 下部パディング（仮想スクロール用） */}
             {paddingBottom > 0 && (
               <tr>
                 <td colSpan={tableWithEditData.table.getAllColumns().length} style={{ height: paddingBottom }} />
@@ -303,14 +342,14 @@ export const ItemTable: React.FC<ItemTableProps> = ({
       {/* フッター情報 */}
       <div className="flex items-center justify-between p-3 text-sm text-gray-600 border-t border-gray-200 bg-white">
         <div>
-          {tableWithEditData.table.getRowModel().rows.length === 0 ? (
+          {tableRows.length === 0 ? (
             'No rows to display'
           ) : (
             <>
-              {tableWithEditData.table.getRowModel().rows.length === displayData.length ? (
+              {tableRows.length === displayData.length ? (
                 `Total: ${displayData.length.toLocaleString()} rows`
               ) : (
-                `Filtered: ${tableWithEditData.table.getRowModel().rows.length.toLocaleString()} of ${displayData.length.toLocaleString()} rows`
+                `Filtered: ${tableRows.length.toLocaleString()} of ${displayData.length.toLocaleString()} rows`
               )}
               {isEditMode && hasChanges && (
                 <span className="ml-2 text-yellow-600">• Unsaved changes</span>

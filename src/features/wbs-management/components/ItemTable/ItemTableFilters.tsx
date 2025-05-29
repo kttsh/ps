@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Item } from '../../types/item';
 import { fgOptions } from '../../mock/fgOptions';
-import { costElementOptions, ibsCodeOptions } from '../../mock/selectOptions';
+import { ibsCodeOptions } from '../../mock/selectOptions';
 
 interface ItemTableFiltersProps {
   column: Column<Item, unknown>;
@@ -18,10 +18,9 @@ interface ItemTableFiltersProps {
  * 
  * カラムのタイプに応じて適切なフィルター入力を提供します：
  * - Function/Groupカラム: セレクトボックス（A-Zの選択肢）
- * - Cost Elementカラム: セレクトボックス（定義済み選択肢）
  * - IBS Codeカラム: セレクトボックス（定義済み選択肢）
  * - 数量カラム: 数値入力
- * - その他: テキスト入力
+ * - その他（Cost Element含む）: テキスト入力
  */
 export const ItemTableFilters: React.FC<ItemTableFiltersProps> = ({ column }) => {
   const columnId = column.id;
@@ -36,7 +35,7 @@ export const ItemTableFilters: React.FC<ItemTableFiltersProps> = ({ column }) =>
         value={(filterValue as string) || ''}
         onValueChange={(value) => column.setFilterValue(value === 'all' ? '' : value)}
       >
-        <SelectTrigger className="h-7 text-xs">
+        <SelectTrigger className="h-6 text-xs px-1 rounded-sm">
           <SelectValue placeholder="All" />
         </SelectTrigger>
         <SelectContent className="max-h-60">
@@ -52,26 +51,16 @@ export const ItemTableFilters: React.FC<ItemTableFiltersProps> = ({ column }) =>
   }
 
   /**
-   * Cost Elementカラム専用のセレクトフィルター
+   * Cost Elementカラム専用のテキストフィルター（セレクトボックスから変更）
    */
   if (columnId === 'costElement') {
     return (
-      <Select
+      <Input
+        placeholder="Filter..."
         value={(filterValue as string) || ''}
-        onValueChange={(value) => column.setFilterValue(value === 'all' ? '' : value)}
-      >
-        <SelectTrigger className="h-7 text-xs">
-          <SelectValue placeholder="All" />
-        </SelectTrigger>
-        <SelectContent className="max-h-60">
-          <SelectItem value="all">All</SelectItem>
-          {costElementOptions.map((option) => (
-            <SelectItem key={option.code} value={option.code}>
-              {option.code}: {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        onChange={(e) => column.setFilterValue(e.target.value)}
+        className="h-6 text-xs px-1 rounded-sm"
+      />
     );
   }
 
@@ -84,14 +73,14 @@ export const ItemTableFilters: React.FC<ItemTableFiltersProps> = ({ column }) =>
         value={(filterValue as string) || ''}
         onValueChange={(value) => column.setFilterValue(value === 'all' ? '' : value)}
       >
-        <SelectTrigger className="h-7 text-xs">
+        <SelectTrigger className="h-6 text-xs px-1 rounded-sm">
           <SelectValue placeholder="All" />
         </SelectTrigger>
         <SelectContent className="max-h-60">
           <SelectItem value="all">All</SelectItem>
           {ibsCodeOptions.map((option) => (
-            <SelectItem key={option.code} value={option.code}>
-              {option.code}: {option.label}
+            <SelectItem key={option.code} value={option.code} className="text-xs">
+              {option.code}
             </SelectItem>
           ))}
         </SelectContent>
@@ -109,7 +98,7 @@ export const ItemTableFilters: React.FC<ItemTableFiltersProps> = ({ column }) =>
         placeholder="Filter..."
         value={(filterValue as string) || ''}
         onChange={(e) => column.setFilterValue(e.target.value)}
-        className="h-7 text-xs"
+        className="h-6 text-xs px-1 rounded-sm"
         min="0"
       />
     );
@@ -123,7 +112,7 @@ export const ItemTableFilters: React.FC<ItemTableFiltersProps> = ({ column }) =>
       placeholder="Filter..."
       value={(filterValue as string) || ''}
       onChange={(e) => column.setFilterValue(e.target.value)}
-      className="h-7 text-xs"
+      className="h-6 text-xs px-1 rounded-sm"
     />
   );
 };

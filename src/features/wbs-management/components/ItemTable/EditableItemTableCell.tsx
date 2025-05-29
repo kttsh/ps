@@ -98,7 +98,7 @@ export const EditableItemTableCell: React.FC<EditableItemTableCellProps> = ({
     
     return (
       <div className={cn(
-        'text-sm font-mono',
+        'text-xs font-mono',
         isEditMode && 'text-gray-500 opacity-60'
       )} title="Read-only">
         {strValue}
@@ -118,7 +118,7 @@ export const EditableItemTableCell: React.FC<EditableItemTableCellProps> = ({
             const numValue = parseInt(e.target.value) || 0;
             onCellChange(numValue);
           }}
-          className="h-8 text-sm text-right font-mono"
+          className="h-6 text-xs text-right font-mono px-1 py-0 rounded-sm border-gray-300 focus:border-blue-500"
           min="0"
         />
       );
@@ -131,16 +131,13 @@ export const EditableItemTableCell: React.FC<EditableItemTableCellProps> = ({
           value={strValue}
           onValueChange={(selectedValue) => onCellChange(selectedValue)}
         >
-          <SelectTrigger className="h-8 text-xs">
+          <SelectTrigger className="h-6 text-xs px-1 py-0 rounded-sm border-gray-300">
             <SelectValue placeholder="Select..." />
           </SelectTrigger>
           <SelectContent className="max-h-60">
             {costElementOptions.map((option) => (
-              <SelectItem key={option.code} value={option.code}>
-                <div>
-                  <div className="font-semibold">{option.code}</div>
-                  <div className="text-xs text-gray-500">{option.label}</div>
-                </div>
+              <SelectItem key={option.code} value={option.code} className="text-xs">
+                {option.code}
               </SelectItem>
             ))}
           </SelectContent>
@@ -155,16 +152,13 @@ export const EditableItemTableCell: React.FC<EditableItemTableCellProps> = ({
           value={strValue}
           onValueChange={(selectedValue) => onCellChange(selectedValue)}
         >
-          <SelectTrigger className="h-8 text-xs">
+          <SelectTrigger className="h-6 text-xs px-1 py-0 rounded-sm border-gray-300">
             <SelectValue placeholder="Select..." />
           </SelectTrigger>
           <SelectContent className="max-h-60">
             {ibsCodeOptions.map((option) => (
-              <SelectItem key={option.code} value={option.code}>
-                <div>
-                  <div className="font-semibold">{option.code}</div>
-                  <div className="text-xs text-gray-500">{option.label}</div>
-                </div>
+              <SelectItem key={option.code} value={option.code} className="text-xs">
+                {option.code}
               </SelectItem>
             ))}
           </SelectContent>
@@ -179,7 +173,7 @@ export const EditableItemTableCell: React.FC<EditableItemTableCellProps> = ({
         value={strValue}
         onChange={(e) => onCellChange(e.target.value)}
         className={cn(
-          'h-8 text-sm',
+          'h-6 text-xs px-1 py-0 rounded-sm border-gray-300 focus:border-blue-500',
           (columnId === 'coreItemNo' || columnId === 'itemNo') && 'font-mono'
         )}
         placeholder={`Enter ${columnId}...`}
@@ -193,7 +187,7 @@ export const EditableItemTableCell: React.FC<EditableItemTableCellProps> = ({
   if (columnId === 'qty') {
     const numValue = typeof value === 'number' ? value : 0;
     return (
-      <div className="text-right font-mono text-sm">
+      <div className="text-right font-mono text-xs">
         {numValue.toLocaleString()}
       </div>
     );
@@ -225,7 +219,7 @@ export const EditableItemTableCell: React.FC<EditableItemTableCellProps> = ({
     const label = costElementCodeMap.get(strValue);
     
     return (
-      <div className="font-mono text-sm">
+      <div className="font-mono text-xs">
         <div className="font-semibold">{strValue}</div>
         {label && (
           <div className="text-xs text-gray-500 truncate" title={label}>
@@ -241,7 +235,7 @@ export const EditableItemTableCell: React.FC<EditableItemTableCellProps> = ({
     const label = ibsCodeMap.get(strValue);
     
     return (
-      <div className="font-mono text-sm">
+      <div className="font-mono text-xs">
         <div className="font-semibold">{strValue}</div>
         {label && (
           <div className="text-xs text-gray-500 truncate" title={label}>
@@ -255,7 +249,7 @@ export const EditableItemTableCell: React.FC<EditableItemTableCellProps> = ({
   // その他のカラムはデフォルトスタイル
   return (
     <div className={cn(
-      'text-sm',
+      'text-xs',
       (columnId === 'coreItemNo' || columnId === 'itemNo') && 'font-mono'
     )}>
       {flexRender(cell.column.columnDef.cell, cell.getContext())}

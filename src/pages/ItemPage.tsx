@@ -149,7 +149,7 @@ export default function ItemPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Item Management</h1>
             <p className="text-gray-600 mt-1">
-              Editable table with inline cell editing
+              Enhanced editable table with always-visible filters in edit mode
             </p>
             <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
               <span>{rowCount.toLocaleString()} rows loaded</span>
@@ -252,14 +252,20 @@ export default function ItemPage() {
             <div>
               <strong>Dropdown Columns:</strong>
               <ul className="mt-1 space-y-0.5 ml-2">
-                <li>• Cost Element (Dropdown)</li>
                 <li>• IBS Code (Dropdown)</li>
+              </ul>
+              <strong className="block mt-2">Text Filter Columns:</strong>
+              <ul className="mt-1 space-y-0.5 ml-2">
+                <li>• Cost Element (Text input)</li>
               </ul>
               <strong className="block mt-2">Read-only:</strong>
               <ul className="mt-1 space-y-0.5 ml-2">
                 <li>• Job No. • Function/Group</li>
               </ul>
             </div>
+          </div>
+          <div className="mt-2 text-xs text-blue-600">
+            <strong>Filter Behavior:</strong> Filters are always visible during edit mode for easier data manipulation.
           </div>
         </div>
 
