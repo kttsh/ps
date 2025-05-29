@@ -4,21 +4,20 @@
 import React from 'react';
 import type { Column } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// Select関連のインポートは残す可能性がありますが、Sheet関連は削除します。
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; 
 import type { Item } from '../../types/item';
-import { fgOptions } from '../../mock/fgOptions';
-import { ibsCodeOptions } from '../../mock/selectOptions';
+// import { ibsCodeOptions } from '../../mock/selectOptions'; // IBS Codeのテキスト入力化に伴い不要な可能性
 
 interface ItemTableFiltersProps {
-  column: Column<Item, unknown>;
+  column: Column<Item, Item[keyof Item]>;
 }
 
 /**
  * カラムごとのフィルターコンポーネント
  * 
  * カラムのタイプに応じて適切なフィルター入力を提供します：
- * - Function/Groupカラム: セレクトボックス（A-Zの選択肢）
- * - IBS Codeカラム: セレクトボックス（定義済み選択肢）
+ * - IBS Codeカラム: テキスト入力（以前はセレクトボックス）
  * - 数量カラム: 数値入力
  * - その他（Cost Element含む）: テキスト入力
  */
@@ -26,65 +25,34 @@ export const ItemTableFilters: React.FC<ItemTableFiltersProps> = ({ column }) =>
   const columnId = column.id;
   const filterValue = column.getFilterValue();
 
-  /**
-   * Function/Groupカラム専用のセレクトフィルター
-   */
-  if (columnId === 'fg') {
-    return (
-      <Select
-        value={(filterValue as string) || ''}
-        onValueChange={(value) => column.setFilterValue(value === 'all' ? '' : value)}
-      >
-        <SelectTrigger className="h-6 text-xs px-1 rounded-sm">
-          <SelectValue placeholder="All" />
-        </SelectTrigger>
-        <SelectContent className="max-h-60">
-          <SelectItem value="all">All</SelectItem>
-          {fgOptions.map((option) => (
-            <SelectItem key={option.code} value={option.code}>
-              {option.code}: {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    );
-  }
+  // filterValueの型を安全に扱うための準備
+  const currentFilter = typeof filterValue === 'string' || typeof filterValue === 'number' ? String(filterValue) : '';
 
   /**
-   * Cost Elementカラム専用のテキストフィルター（セレクトボックスから変更）
+   * Cost Elementカラム専用のテキストフィルター
    */
   if (columnId === 'costElement') {
     return (
       <Input
-        placeholder="Filter..."
-        value={(filterValue as string) || ''}
-        onChange={(e) => column.setFilterValue(e.target.value)}
+        placeholder="Filter Cost Element..."
+        value={currentFilter}
+        onChange={(e) => column.setFilterValue(e.target.value || undefined)}
         className="h-6 text-xs px-1 rounded-sm"
       />
     );
   }
 
   /**
-   * IBS Codeカラム専用のセレクトフィルター
+   * IBS Codeカラム専用のフィルター (テキスト入力に変更)
    */
   if (columnId === 'ibsCode') {
     return (
-      <Select
-        value={(filterValue as string) || ''}
-        onValueChange={(value) => column.setFilterValue(value === 'all' ? '' : value)}
-      >
-        <SelectTrigger className="h-6 text-xs px-1 rounded-sm">
-          <SelectValue placeholder="All" />
-        </SelectTrigger>
-        <SelectContent className="max-h-60">
-          <SelectItem value="all">All</SelectItem>
-          {ibsCodeOptions.map((option) => (
-            <SelectItem key={option.code} value={option.code} className="text-xs">
-              {option.code}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Input
+        placeholder="Filter IBS Code..."
+        value={currentFilter}
+        onChange={(e) => column.setFilterValue(e.target.value || undefined)}
+        className="h-6 text-xs px-1 rounded-sm"
+      />
     );
   }
 
@@ -95,9 +63,9 @@ export const ItemTableFilters: React.FC<ItemTableFiltersProps> = ({ column }) =>
     return (
       <Input
         type="number"
-        placeholder="Filter..."
-        value={(filterValue as string) || ''}
-        onChange={(e) => column.setFilterValue(e.target.value)}
+        placeholder="Filter Qty..."
+        value={currentFilter}
+        onChange={(e) => column.setFilterValue(e.target.value || undefined)}
         className="h-6 text-xs px-1 rounded-sm"
         min="0"
       />
@@ -109,9 +77,9 @@ export const ItemTableFilters: React.FC<ItemTableFiltersProps> = ({ column }) =>
    */
   return (
     <Input
-      placeholder="Filter..."
-      value={(filterValue as string) || ''}
-      onChange={(e) => column.setFilterValue(e.target.value)}
+      placeholder={`Filter ${columnId}...`}
+      value={currentFilter}
+      onChange={(e) => column.setFilterValue(e.target.value || undefined)}
       className="h-6 text-xs px-1 rounded-sm"
     />
   );

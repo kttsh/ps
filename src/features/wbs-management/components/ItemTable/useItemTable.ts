@@ -39,22 +39,6 @@ export const useItemTable = (data: Item[], onDataChange?: (updatedData: Item[]) 
      */
     const columnDefs: ItemColumn[] = [
         {
-            id: 'jobNo',
-            header: 'Job No',
-            accessorKey: 'jobNo',
-            size: 100,
-            minSize: 80,
-            maxSize: 120,
-        },
-        {
-            id: 'fg',
-            header: 'Function/Group',
-            accessorKey: 'fg',
-            size: 120,
-            minSize: 100,
-            maxSize: 150,
-        },
-        {
             id: 'coreItemNo',
             header: 'Core Item No.',
             accessorKey: 'coreItemNo',
@@ -108,21 +92,18 @@ export const useItemTable = (data: Item[], onDataChange?: (updatedData: Item[]) 
      * TanStack Tableのカラム定義を生成
      * フィルター機能を含む完全なカラム定義
      */
-    const columns = useMemo<ColumnDef<Item>[]>(
+    const columns = useMemo<ColumnDef<Item, Item[keyof Item]>[]>(
         () =>
             columnDefs.map((col) => ({
-                id: col.id,
+                id: col.id as string,
                 header: col.header,
-                accessorKey: col.accessorKey,
+                accessorKey: col.accessorKey as keyof Item,
                 size: col.size,
                 minSize: col.minSize,
                 maxSize: col.maxSize,
                 filterFn: 'includesString',
-                // 各カラムのフィルター入力を有効化
                 enableColumnFilter: true,
-                // ソート機能を有効化
                 enableSorting: true,
-                // セルのレンダリング（型安全性の向上）
                 cell: ({ getValue }) => {
                     const value = getValue();
                     // 各カラムタイプに応じた適切な表示処理

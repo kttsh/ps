@@ -1,15 +1,32 @@
 // pages/wbs-management/items.tsx
 // 編集機能付きItemTableコンポーネントの使用例
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { ItemTable } from '@/features/wbs-management/components/ItemTable';
 import { generateMockItems } from '@/features/wbs-management/mock/itemData';
-import type { Item } from '@/features/wbs-management/types/item';
-import { Loader2, RefreshCw, Save, Download, Upload } from 'lucide-react';
+import type { Item, FGCode } from '@/features/wbs-management/types/item';
+import { Loader2, RefreshCw, Save, Download, Upload, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetClose,
+  SheetFooter
+} from "@/components/ui/sheet"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 /**
  * アイテム管理ページ（編集機能付き）
@@ -29,6 +46,10 @@ export default function ItemPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  // サイドメニュー用状態
+  const [selectedJobNo, setSelectedJobNo] = useState<string | undefined>(undefined);
+  const [selectedFg, setSelectedFg] = useState<FGCode | undefined>(undefined);
+
   /**
    * 指定された行数のデータを生成
    */
@@ -41,10 +62,26 @@ export default function ItemPage() {
       setRowCount(count);
       setHasUnsavedChanges(false);
       setLastSaved(null);
+      // データ生成時にJobNoとFGの選択肢をリセットし、デフォルトフィルタをクリア
+      setSelectedJobNo(undefined);
+      setSelectedFg(undefined);
     } finally {
       setIsGenerating(false);
     }
   };
+
+  /**
+   * JobNoとFGのユニークなリストを生成 (サイドメニューの選択肢用)
+   */
+  const uniqueJobNos = useMemo(() => {
+    const jobNos = new Set(items.map(item => item.jobNo));
+    return Array.from(jobNos).sort();
+  }, [items]);
+
+  const uniqueFgs = useMemo(() => {
+    const fgs = new Set(items.map(item => item.fg));
+    return Array.from(fgs).sort() as FGCode[];
+  }, [items]);
 
   /**
    * 初期データのロード
@@ -130,6 +167,17 @@ export default function ItemPage() {
     URL.revokeObjectURL(url);
   };
 
+  /**
+   * 選択されたJobNoとFGでデータをフィルタリング
+   */
+  const filteredItems = useMemo(() => {
+    return items.filter(item => {
+      const jobNoMatch = selectedJobNo ? item.jobNo === selectedJobNo : true;
+      const fgMatch = selectedFg ? item.fg === selectedFg : true;
+      return jobNoMatch && fgMatch;
+    });
+  }, [items, selectedJobNo, selectedFg]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -146,19 +194,72 @@ export default function ItemPage() {
       {/* ページヘッダー */}
       <div className="px-6 py-4 border-b bg-white shadow-sm">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Item Management</h1>
-            <p className="text-gray-600 mt-1">
-              Enhanced editable table with always-visible filters in edit mode
-            </p>
-            <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-              <span>{rowCount.toLocaleString()} rows loaded</span>
-              {lastSaved && (
-                <span>• Last saved: {lastSaved.toLocaleTimeString()}</span>
-              )}
-              {hasUnsavedChanges && (
-                <span className="text-yellow-600">• Unsaved changes</span>
-              )}
+          <div className="flex items-center gap-4">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left">
+                <SheetHeader>
+                  <SheetTitle>Filters</SheetTitle>
+                  <SheetDescription>
+                    Select JobNo and Function/Group to filter the table.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="jobno-select" className="text-right col-span-1">
+                      JobNo
+                    </Label>
+                    <Select 
+                      value={selectedJobNo || 'all'} 
+                      onValueChange={(value) => setSelectedJobNo(value === 'all' ? undefined : value)}
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="All JobNos" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All JobNos</SelectItem>
+                        {uniqueJobNos.map(jobNo => (
+                          <SelectItem key={jobNo} value={jobNo}>{jobNo}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="fg-select" className="text-right col-span-1">
+                      FG
+                    </Label>
+                    <Select 
+                      value={selectedFg || 'all'} 
+                      onValueChange={(value) => setSelectedFg(value === 'all' ? undefined : value as FGCode)}
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="All FGs" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All FGs</SelectItem>
+                        {uniqueFgs.map(fg => (
+                          <SelectItem key={fg} value={fg}>{fg}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <SheetFooter>
+                  <SheetClose asChild>
+                    <Button type="button" onClick={() => { setSelectedJobNo(undefined); setSelectedFg(undefined); }}>Clear Filters</Button>
+                  </SheetClose>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Item Management</h1>
+              <p className="text-gray-600 mt-1">
+                Filtered by: {selectedJobNo || 'All JobNos'}, {selectedFg || 'All FGs'}
+              </p>
             </div>
           </div>
           
@@ -293,7 +394,7 @@ export default function ItemPage() {
         ) : (
           <div className="h-full">
             <ItemTable 
-              data={items} 
+              data={filteredItems} 
               className="h-full"
               onDataChange={handleDataChange}
             />

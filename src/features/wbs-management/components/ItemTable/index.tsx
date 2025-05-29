@@ -212,9 +212,9 @@ export const ItemTable: React.FC<ItemTableProps> = ({
       >
         <table className="w-full">
           {/* テーブルヘッダー */}
-          <thead className="sticky top-0 z-20 bg-gray-100">
+          <thead className="sticky top-0 z-20 bg-gray-100 border-b border-gray-200">
             {/* カラムヘッダー行 */}
-            <tr className="border-b border-gray-200">
+            <tr>
               {tableWithEditData.table.getFlatHeaders().map((header) => {
                 const column = header.column;
                 const isSorted = column.getIsSorted();
@@ -254,7 +254,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
             
             {/* フィルター行（編集モード時は常に表示、非編集時は切り替え可能） */}
             {(showFilters || isEditMode) && (
-              <tr className="border-b border-gray-200">
+              <tr className="border-t border-gray-200">
                 {tableWithEditData.table.getFlatHeaders().map((header) => (
                   <th
                     key={`filter-${header.id}`}
@@ -264,7 +264,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({
                     }}
                   >
                     {header.column.getCanFilter() && (
-                      <ItemTableFilters column={header.column} />
+                      <ItemTableFilters column={header.column as import('@tanstack/react-table').Column<Item, Item[keyof Item]>} />
                     )}
                   </th>
                 ))}
@@ -294,11 +294,10 @@ export const ItemTable: React.FC<ItemTableProps> = ({
                 <tr
                   key={row.id}
                   className={cn(
-                    'border-b border-gray-100 transition-colors',
+                    'border-b border-gray-100 transition-colors bg-white',
                     isEditMode 
                       ? 'hover:bg-blue-50' 
-                      : 'hover:bg-gray-50',
-                    virtualRow.index % 2 === 0 ? 'bg-white' : 'bg-gray-25'
+                      : 'hover:bg-gray-50'
                   )}
                   style={{
                     height: `${virtualRow.size}px`,
