@@ -1,54 +1,112 @@
-# React + TypeScript + Vite
+# WBS Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A sophisticated project management application designed for managing Work Breakdown Structure (WBS) in engineering and construction projects.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 📊 Item Management
+- Manage project items with detailed attributes (Job No, Function/Group codes, Cost Elements)
+- Advanced data table with inline editing and validation
+- Virtual scrolling for handling large datasets (100K+ items)
+- Real-time filtering and sorting capabilities
+- Column-specific input types (text, number, dropdown)
 
-## Expanding the ESLint configuration
+### 👥 Vendor Assignment
+- Package-based vendor assignment system
+- Master vendor database with comprehensive vendor details
+- Drag-and-drop vendor assignment to project packages
+- Multi-vendor selection and bulk operations
+- Vendor status tracking (Active, Inactive, Pending)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 🔧 Technical Features
+- Type-safe with comprehensive TypeScript definitions
+- Accessible UI components built with Radix UI
+- Performance optimized for enterprise-scale data
+- Component-driven development with Storybook
+- Mobile-responsive design
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Tech Stack
+
+- **React 19** with TypeScript
+- **TanStack Table** for advanced data grid functionality
+- **TanStack Virtual** for performance optimization
+- **Radix UI** components for accessibility
+- **Tailwind CSS** for styling
+- **Storybook** for component development
+- **Vite** for build tooling
+
+## Getting Started
+
+### Prerequisites
+- Node.js (18+ recommended)
+- npm or bun
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+# or
+bun install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+# Start development server
+npm run dev
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+# Start Storybook
+npm run storybook
 ```
+
+### Build
+
+```bash
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+### Testing & Quality
+
+```bash
+# Run linting
+npm run lint
+
+# Build Storybook
+npm run build-storybook
+```
+
+## Project Structure
+
+```
+src/
+├── features/
+│   └── wbs-management/        # Core WBS management functionality
+│       ├── components/        # Feature-specific components
+│       ├── types/            # TypeScript type definitions
+│       └── mock/             # Mock data for development
+├── components/
+│   └── ui/                   # Reusable UI components
+├── pages/                    # Application pages
+└── lib/                      # Utility functions
+```
+
+## Key Components
+
+- **ItemTable**: Advanced data table with virtual scrolling and inline editing
+- **VendorAssignment**: Vendor management and assignment interface
+- **UI Components**: Accessible, reusable components built with Radix UI
+
+## Business Context
+
+This application is designed for engineering and construction project management, where:
+
+- Projects are broken down into work packages using WBS methodology
+- Items represent work elements with specific classifications and cost tracking
+- Vendors are assigned to packages for project execution
+- Cost elements track different expense categories (material, labor, equipment)
+- IBS codes categorize building system components

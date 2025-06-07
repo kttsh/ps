@@ -1,7 +1,7 @@
-import ItemsPage from './pages/wbs-management/items';
+import ItemsPage from "./pages/wbs-management/items";
 
 function App() {
-  return <ItemsPage />;
+	return <ItemsPage />;
 }
 
 export default App;

@@ -1,36 +1,36 @@
 // pages/wbs-management/items.tsx
 // 編集機能付きItemTableコンポーネントの使用例
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { ItemTable } from '@/features/wbs-management/components/ItemTable';
-import { generateMockItems } from '@/features/wbs-management/mock/itemData';
-import type { Item, FGCode } from '@/features/wbs-management/types/item';
-import { Loader2, RefreshCw, Save, Download, Upload, Menu } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetClose,
-  SheetFooter
-} from "@/components/ui/sheet"
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+	Sheet,
+	SheetClose,
+	SheetContent,
+	SheetDescription,
+	SheetFooter,
+	SheetHeader,
+	SheetTitle,
+	SheetTrigger,
+} from "@/components/ui/sheet";
+import { ItemTable } from "@/features/wbs-management/components/ItemTable";
+import { generateMockItems } from "@/features/wbs-management/mock/itemData";
+import type { FGCode, Item } from "@/features/wbs-management/types/item";
+import { Download, Loader2, Menu, RefreshCw } from "lucide-react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 
 /**
  * アイテム管理ページ（編集機能付き）
- * 
+ *
  * 新機能：
  * - インラインセル編集
  * - データの保存・復元
@@ -38,371 +38,412 @@ import {
  * - データのエクスポート/インポート（デモ用）
  */
 export default function ItemPage() {
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [rowCount, setRowCount] = useState(10000);
-  const [inputValue, setInputValue] = useState('10000');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+	const [items, setItems] = useState<Item[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [, setRowCount] = useState(10000);
+	const [inputValue, setInputValue] = useState("10000");
+	const [isGenerating, setIsGenerating] = useState(false);
+	const [, setLastSaved] = useState<Date | null>(null);
+	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // サイドメニュー用状態
-  const [selectedJobNo, setSelectedJobNo] = useState<string | undefined>(undefined);
-  const [selectedFg, setSelectedFg] = useState<FGCode | undefined>(undefined);
+	// サイドメニュー用状態
+	const [selectedJobNo, setSelectedJobNo] = useState<string | undefined>(
+		undefined,
+	);
+	const [selectedFg, setSelectedFg] = useState<FGCode | undefined>(undefined);
 
-  /**
-   * 指定された行数のデータを生成
-   */
-  const generateData = async (count: number) => {
-    setIsGenerating(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 0));
-      const newItems = generateMockItems(count);
-      setItems(newItems);
-      setRowCount(count);
-      setHasUnsavedChanges(false);
-      setLastSaved(null);
-      // データ生成時にJobNoとFGの選択肢をリセットし、デフォルトフィルタをクリア
-      setSelectedJobNo(undefined);
-      setSelectedFg(undefined);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+	/**
+	 * 指定された行数のデータを生成
+	 */
+	const generateData = async (count: number) => {
+		setIsGenerating(true);
+		try {
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			const newItems = generateMockItems(count);
+			setItems(newItems);
+			setRowCount(count);
+			setHasUnsavedChanges(false);
+			setLastSaved(null);
+			// データ生成時にJobNoとFGの選択肢をリセットし、デフォルトフィルタをクリア
+			setSelectedJobNo(undefined);
+			setSelectedFg(undefined);
+		} finally {
+			setIsGenerating(false);
+		}
+	};
 
-  /**
-   * JobNoとFGのユニークなリストを生成 (サイドメニューの選択肢用)
-   */
-  const uniqueJobNos = useMemo(() => {
-    const jobNos = new Set(items.map(item => item.jobNo));
-    return Array.from(jobNos).sort();
-  }, [items]);
+	/**
+	 * JobNoとFGのユニークなリストを生成 (サイドメニューの選択肢用)
+	 */
+	const uniqueJobNos = useMemo(() => {
+		const jobNos = new Set(items.map((item) => item.jobNo));
+		return Array.from(jobNos).sort();
+	}, [items]);
 
-  const uniqueFgs = useMemo(() => {
-    const fgs = new Set(items.map(item => item.fg));
-    return Array.from(fgs).sort() as FGCode[];
-  }, [items]);
+	const uniqueFgs = useMemo(() => {
+		const fgs = new Set(items.map((item) => item.fg));
+		return Array.from(fgs).sort() as FGCode[];
+	}, [items]);
 
-  /**
-   * 初期データのロード
-   */
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        setLoading(true);
-        await generateData(10000);
-      } finally {
-        setLoading(false);
-      }
-    };
+	/**
+	 * 初期データのロード
+	 */
+	useEffect(() => {
+		const loadInitialData = async () => {
+			try {
+				setLoading(true);
+				await generateData(10000);
+			} finally {
+				setLoading(false);
+			}
+		};
 
-    loadInitialData();
-  }, []);
+		loadInitialData();
+	}, []);
 
-  /**
-   * テーブルデータの変更ハンドラー
-   */
-  const handleDataChange = useCallback((updatedData: Item[]) => {
-    setItems(updatedData);
-    setLastSaved(new Date());
-    setHasUnsavedChanges(false);
-    
-    // 実際のアプリケーションでは、ここでAPIに保存
-    console.log('Data saved:', updatedData.length, 'items');
-    
-    // デモ用：保存成功の通知
-    setTimeout(() => {
-      // Toast通知などを表示
-    }, 100);
-  }, []);
+	/**
+	 * テーブルデータの変更ハンドラー
+	 */
+	const handleDataChange = useCallback((updatedData: Item[]) => {
+		setItems(updatedData);
+		setLastSaved(new Date());
+		setHasUnsavedChanges(false);
 
-  /**
-   * 行数変更ハンドラー
-   */
-  const handleRowCountChange = async () => {
-    const count = parseInt(inputValue);
-    if (isNaN(count) || count < 0) {
-      alert('Please enter a valid positive number');
-      return;
-    }
-    
-    if (hasUnsavedChanges) {
-      const confirmed = confirm('You have unsaved changes. Generating new data will discard them. Continue?');
-      if (!confirmed) return;
-    }
-    
-    if (count > 1000000) {
-      const confirmed = confirm('Generating over 1 million rows may affect performance. Continue?');
-      if (!confirmed) return;
-    }
-    await generateData(count);
-  };
+		// 実際のアプリケーションでは、ここでAPIに保存
+		console.log("Data saved:", updatedData.length, "items");
 
-  /**
-   * プリセットボタンのクリックハンドラー
-   */
-  const handlePresetClick = (count: number) => {
-    if (hasUnsavedChanges) {
-      const confirmed = confirm('You have unsaved changes. This will discard them. Continue?');
-      if (!confirmed) return;
-    }
-    
-    setInputValue(count.toString());
-    generateData(count);
-  };
+		// デモ用：保存成功の通知
+		setTimeout(() => {
+			// Toast通知などを表示
+		}, 100);
+	}, []);
 
-  /**
-   * データのエクスポート（デモ用）
-   */
-  const handleExportData = () => {
-    const dataStr = JSON.stringify(items, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `items-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
+	/**
+	 * 行数変更ハンドラー
+	 */
+	const handleRowCountChange = async () => {
+		const count = Number.parseInt(inputValue);
+		if (Number.isNaN(count) || count < 0) {
+			alert("Please enter a valid positive number");
+			return;
+		}
 
-  /**
-   * 選択されたJobNoとFGでデータをフィルタリング
-   */
-  const filteredItems = useMemo(() => {
-    return items.filter(item => {
-      const jobNoMatch = selectedJobNo ? item.jobNo === selectedJobNo : true;
-      const fgMatch = selectedFg ? item.fg === selectedFg : true;
-      return jobNoMatch && fgMatch;
-    });
-  }, [items, selectedJobNo, selectedFg]);
+		if (hasUnsavedChanges) {
+			const confirmed = confirm(
+				"You have unsaved changes. Generating new data will discard them. Continue?",
+			);
+			if (!confirmed) return;
+		}
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading initial data...</p>
-        </div>
-      </div>
-    );
-  }
+		if (count > 1000000) {
+			const confirmed = confirm(
+				"Generating over 1 million rows may affect performance. Continue?",
+			);
+			if (!confirmed) return;
+		}
+		await generateData(count);
+	};
 
-  return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* ページヘッダー */}
-      <div className="px-6 py-4 border-b bg-white shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left">
-                <SheetHeader>
-                  <SheetTitle>Filters</SheetTitle>
-                  <SheetDescription>
-                    Select JobNo and Function/Group to filter the table.
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="jobno-select" className="text-right col-span-1">
-                      JobNo
-                    </Label>
-                    <Select 
-                      value={selectedJobNo || 'all'} 
-                      onValueChange={(value) => setSelectedJobNo(value === 'all' ? undefined : value)}
-                    >
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="All JobNos" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All JobNos</SelectItem>
-                        {uniqueJobNos.map(jobNo => (
-                          <SelectItem key={jobNo} value={jobNo}>{jobNo}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="fg-select" className="text-right col-span-1">
-                      FG
-                    </Label>
-                    <Select 
-                      value={selectedFg || 'all'} 
-                      onValueChange={(value) => setSelectedFg(value === 'all' ? undefined : value as FGCode)}
-                    >
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="All FGs" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All FGs</SelectItem>
-                        {uniqueFgs.map(fg => (
-                          <SelectItem key={fg} value={fg}>{fg}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <SheetFooter>
-                  <SheetClose asChild>
-                    <Button type="button" onClick={() => { setSelectedJobNo(undefined); setSelectedFg(undefined); }}>Clear Filters</Button>
-                  </SheetClose>
-                </SheetFooter>
-              </SheetContent>
-            </Sheet>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Item Management</h1>
-              <p className="text-gray-600 mt-1">
-                Filtered by: {selectedJobNo || 'All JobNos'}, {selectedFg || 'All FGs'}
-              </p>
-            </div>
-          </div>
-          
-          {/* コントロールパネル */}
-          <div className="flex items-center gap-4">
-            {/* データ管理ボタン */}
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleExportData}
-                className="flex items-center gap-2"
-                disabled={items.length === 0}
-              >
-                <Download className="w-4 h-4" />
-                Export
-              </Button>
-            </div>
-            
-            {/* プリセットボタン */}
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handlePresetClick(1000)}
-                disabled={isGenerating}
-              >
-                1K
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handlePresetClick(10000)}
-                disabled={isGenerating}
-              >
-                10K
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handlePresetClick(100000)}
-                disabled={isGenerating}
-              >
-                100K
-              </Button>
-            </div>
-            
-            {/* カスタム行数入力 */}
-            <div className="flex items-center gap-2">
-              <Label htmlFor="rowCount" className="text-sm whitespace-nowrap">
-                Rows:
-              </Label>
-              <Input
-                id="rowCount"
-                type="number"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                className="w-24 h-8"
-                min="0"
-                max="1000000"
-                disabled={isGenerating}
-              />
-              <Button
-                size="sm"
-                onClick={handleRowCountChange}
-                disabled={isGenerating}
-              >
-                {isGenerating ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-4 h-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
+	/**
+	 * プリセットボタンのクリックハンドラー
+	 */
+	const handlePresetClick = (count: number) => {
+		if (hasUnsavedChanges) {
+			const confirmed = confirm(
+				"You have unsaved changes. This will discard them. Continue?",
+			);
+			if (!confirmed) return;
+		}
 
-        {/* 機能説明 */}
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="text-sm font-semibold text-blue-800 mb-2">Editing Features:</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-blue-700">
-            <div>
-              <strong>Editable Columns:</strong>
-              <ul className="mt-1 space-y-0.5 ml-2">
-                <li>• Core Item No. (Text input)</li>
-                <li>• Item No. (Text input)</li>
-                <li>• Item Name (Text input)</li>
-                <li>• Qty (Number input)</li>
-              </ul>
-            </div>
-            <div>
-              <strong>Dropdown Columns:</strong>
-              <ul className="mt-1 space-y-0.5 ml-2">
-                <li>• IBS Code (Dropdown)</li>
-              </ul>
-              <strong className="block mt-2">Text Filter Columns:</strong>
-              <ul className="mt-1 space-y-0.5 ml-2">
-                <li>• Cost Element (Text input)</li>
-              </ul>
-              <strong className="block mt-2">Read-only:</strong>
-              <ul className="mt-1 space-y-0.5 ml-2">
-                <li>• Job No. • Function/Group</li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-2 text-xs text-blue-600">
-            <strong>Filter Behavior:</strong> Filters are always visible during edit mode for easier data manipulation.
-          </div>
-        </div>
+		setInputValue(count.toString());
+		generateData(count);
+	};
 
-        {/* 警告メッセージ */}
-        {hasUnsavedChanges && (
-          <Alert className="mt-3 border-yellow-200 bg-yellow-50">
-            <AlertDescription className="text-yellow-800">
-              <strong>Warning:</strong> You have unsaved changes in the table. Make sure to save your changes before generating new data or leaving the page.
-            </AlertDescription>
-          </Alert>
-        )}
-      </div>
+	/**
+	 * データのエクスポート（デモ用）
+	 */
+	const handleExportData = () => {
+		const dataStr = JSON.stringify(items, null, 2);
+		const dataBlob = new Blob([dataStr], { type: "application/json" });
+		const url = URL.createObjectURL(dataBlob);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = `items-${new Date().toISOString().split("T")[0]}.json`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
+	};
 
-      {/* ItemTableコンポーネント */}
-      <div className="flex-1 p-6 overflow-hidden">
-        {isGenerating ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-              <p className="text-gray-600">
-                Generating {parseInt(inputValue).toLocaleString()} rows...
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="h-full">
-            <ItemTable 
-              data={filteredItems} 
-              className="h-full"
-              onDataChange={handleDataChange}
-            />
-          </div>
-        )}
-      </div>
-    </div>
-  );
+	/**
+	 * 選択されたJobNoとFGでデータをフィルタリング
+	 */
+	const filteredItems = useMemo(() => {
+		return items.filter((item) => {
+			const jobNoMatch = selectedJobNo ? item.jobNo === selectedJobNo : true;
+			const fgMatch = selectedFg ? item.fg === selectedFg : true;
+			return jobNoMatch && fgMatch;
+		});
+	}, [items, selectedJobNo, selectedFg]);
+
+	if (loading) {
+		return (
+			<div className="flex items-center justify-center h-screen">
+				<div className="text-center">
+					<Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+					<p className="text-gray-600">Loading initial data...</p>
+				</div>
+			</div>
+		);
+	}
+
+	return (
+		<div className="h-screen flex flex-col bg-gray-50">
+			{/* ページヘッダー */}
+			<div className="px-6 py-4 border-b bg-white shadow-sm">
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-4">
+						<Sheet>
+							<SheetTrigger asChild>
+								<Button variant="outline" size="icon">
+									<Menu className="h-5 w-5" />
+								</Button>
+							</SheetTrigger>
+							<SheetContent side="left">
+								<SheetHeader>
+									<SheetTitle>Filters</SheetTitle>
+									<SheetDescription>
+										Select JobNo and Function/Group to filter the table.
+									</SheetDescription>
+								</SheetHeader>
+								<div className="grid gap-4 py-4">
+									<div className="grid grid-cols-4 items-center gap-4">
+										<Label
+											htmlFor="jobno-select"
+											className="text-right col-span-1"
+										>
+											JobNo
+										</Label>
+										<Select
+											value={selectedJobNo || "all"}
+											onValueChange={(value) =>
+												setSelectedJobNo(value === "all" ? undefined : value)
+											}
+										>
+											<SelectTrigger className="col-span-3">
+												<SelectValue placeholder="All JobNos" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="all">All JobNos</SelectItem>
+												{uniqueJobNos.map((jobNo) => (
+													<SelectItem key={jobNo} value={jobNo}>
+														{jobNo}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									</div>
+									<div className="grid grid-cols-4 items-center gap-4">
+										<Label
+											htmlFor="fg-select"
+											className="text-right col-span-1"
+										>
+											FG
+										</Label>
+										<Select
+											value={selectedFg || "all"}
+											onValueChange={(value) =>
+												setSelectedFg(
+													value === "all" ? undefined : (value as FGCode),
+												)
+											}
+										>
+											<SelectTrigger className="col-span-3">
+												<SelectValue placeholder="All FGs" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="all">All FGs</SelectItem>
+												{uniqueFgs.map((fg) => (
+													<SelectItem key={fg} value={fg}>
+														{fg}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									</div>
+								</div>
+								<SheetFooter>
+									<SheetClose asChild>
+										<Button
+											type="button"
+											onClick={() => {
+												setSelectedJobNo(undefined);
+												setSelectedFg(undefined);
+											}}
+										>
+											Clear Filters
+										</Button>
+									</SheetClose>
+								</SheetFooter>
+							</SheetContent>
+						</Sheet>
+						<div>
+							<h1 className="text-2xl font-bold text-gray-900">
+								Item Management
+							</h1>
+							<p className="text-gray-600 mt-1">
+								Filtered by: {selectedJobNo || "All JobNos"},{" "}
+								{selectedFg || "All FGs"}
+							</p>
+						</div>
+					</div>
+
+					{/* コントロールパネル */}
+					<div className="flex items-center gap-4">
+						{/* データ管理ボタン */}
+						<div className="flex gap-2">
+							<Button
+								size="sm"
+								variant="outline"
+								onClick={handleExportData}
+								className="flex items-center gap-2"
+								disabled={items.length === 0}
+							>
+								<Download className="w-4 h-4" />
+								Export
+							</Button>
+						</div>
+
+						{/* プリセットボタン */}
+						<div className="flex gap-2">
+							<Button
+								size="sm"
+								variant="outline"
+								onClick={() => handlePresetClick(1000)}
+								disabled={isGenerating}
+							>
+								1K
+							</Button>
+							<Button
+								size="sm"
+								variant="outline"
+								onClick={() => handlePresetClick(10000)}
+								disabled={isGenerating}
+							>
+								10K
+							</Button>
+							<Button
+								size="sm"
+								variant="outline"
+								onClick={() => handlePresetClick(100000)}
+								disabled={isGenerating}
+							>
+								100K
+							</Button>
+						</div>
+
+						{/* カスタム行数入力 */}
+						<div className="flex items-center gap-2">
+							<Label htmlFor="rowCount" className="text-sm whitespace-nowrap">
+								Rows:
+							</Label>
+							<Input
+								id="rowCount"
+								type="number"
+								value={inputValue}
+								onChange={(e) => setInputValue(e.target.value)}
+								className="w-24 h-8"
+								min="0"
+								max="1000000"
+								disabled={isGenerating}
+							/>
+							<Button
+								size="sm"
+								onClick={handleRowCountChange}
+								disabled={isGenerating}
+							>
+								{isGenerating ? (
+									<Loader2 className="w-4 h-4 animate-spin" />
+								) : (
+									<RefreshCw className="w-4 h-4" />
+								)}
+							</Button>
+						</div>
+					</div>
+				</div>
+
+				{/* 機能説明 */}
+				<div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+					<h3 className="text-sm font-semibold text-blue-800 mb-2">
+						Editing Features:
+					</h3>
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-blue-700">
+						<div>
+							<strong>Editable Columns:</strong>
+							<ul className="mt-1 space-y-0.5 ml-2">
+								<li>• Core Item No. (Text input)</li>
+								<li>• Item No. (Text input)</li>
+								<li>• Item Name (Text input)</li>
+								<li>• Qty (Number input)</li>
+							</ul>
+						</div>
+						<div>
+							<strong>Dropdown Columns:</strong>
+							<ul className="mt-1 space-y-0.5 ml-2">
+								<li>• IBS Code (Dropdown)</li>
+							</ul>
+							<strong className="block mt-2">Text Filter Columns:</strong>
+							<ul className="mt-1 space-y-0.5 ml-2">
+								<li>• Cost Element (Text input)</li>
+							</ul>
+							<strong className="block mt-2">Read-only:</strong>
+							<ul className="mt-1 space-y-0.5 ml-2">
+								<li>• Job No. • Function/Group</li>
+							</ul>
+						</div>
+					</div>
+					<div className="mt-2 text-xs text-blue-600">
+						<strong>Filter Behavior:</strong> Filters are always visible during
+						edit mode for easier data manipulation.
+					</div>
+				</div>
+
+				{/* 警告メッセージ */}
+				{hasUnsavedChanges && (
+					<Alert className="mt-3 border-yellow-200 bg-yellow-50">
+						<AlertDescription className="text-yellow-800">
+							<strong>Warning:</strong> You have unsaved changes in the table.
+							Make sure to save your changes before generating new data or
+							leaving the page.
+						</AlertDescription>
+					</Alert>
+				)}
+			</div>
+
+			{/* ItemTableコンポーネント */}
+			<div className="flex-1 p-6 overflow-hidden">
+				{isGenerating ? (
+					<div className="flex items-center justify-center h-full">
+						<div className="text-center">
+							<Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+							<p className="text-gray-600">
+								Generating {Number.parseInt(inputValue).toLocaleString()}{" "}
+								rows...
+							</p>
+						</div>
+					</div>
+				) : (
+					<div className="h-full">
+						<ItemTable
+							data={filteredItems}
+							className="h-full"
+							onDataChange={handleDataChange}
+						/>
+					</div>
+				)}
+			</div>
+		</div>
+	);
 }
 
 /* 
